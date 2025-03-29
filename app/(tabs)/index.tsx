@@ -27,19 +27,18 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // Inicializar la animación con un valor negativo para que salga desde abajo
   const slideAnim = useRef(new Animated.Value(-height)).current;
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerShown: false, // Ocultar la barra de navegación predeterminada
+      headerShown: false,
     });
   }, []);
 
   const openMenu = () => {
     setIsMenuOpen(true);
     Animated.timing(slideAnim, {
-      toValue: 0, // El menú se posiciona en la parte inferior (0)
+      toValue: 0,
       duration: 400,
       useNativeDriver: false,
     }).start();
@@ -47,23 +46,22 @@ export default function HomeScreen() {
 
   const closeMenu = () => {
     Animated.timing(slideAnim, {
-      toValue: -height, // Se oculta completamente debajo de la pantalla
+      toValue: -height,
       duration: 300,
       useNativeDriver: false,
     }).start(() => setIsMenuOpen(false));
   };
 
-  const handleNavigate = (path: string) => {
+  const handleNavigate = (path: any) => {
     closeMenu();
-    setTimeout(() => router.push(path), 300);
+    setTimeout(() => router.push(path as any), 300);
   };
 
   return (
     <View style={styles.mainContainer}>
       <SafeAreaView style={styles.safeArea}>
-        {/* Header personalizado con título y foto de perfil */}
         <View style={styles.headerBackground}>
-          <CustomHeader title="Monitorización" />
+          <CustomHeader title="Monitorización" profileImageUrl="" />
         </View>
         <View style={styles.container}>
           <ScrollView
@@ -81,19 +79,17 @@ export default function HomeScreen() {
               iconComponent={<Ionicons name="heart-half" size={24} color="white" />}
               iconBgColor="#FFD700"
               label="Parámetros"
+              onPress={() => router.push('/parametros' as any)}
             />
             
-            {/* Espacio adicional para el FAB */}
             <View style={styles.fabSpacing} />
           </ScrollView>
         </View>
       </SafeAreaView>
 
-      {/* El backdrop solo se muestra cuando el menú está abierto */}
       {isMenuOpen && <Pressable style={styles.backdrop} onPress={closeMenu} />}
       
-      {/* Controlar la visibilidad del MenuSheet */}
-      {(isMenuOpen || slideAnim._value > -height) && 
+      {(isMenuOpen || (slideAnim as any)._value > -height) && 
         <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
       }
       

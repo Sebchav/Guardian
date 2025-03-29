@@ -5,12 +5,16 @@ import { router } from 'expo-router';
 interface CustomHeaderProps {
   title: string;
   profileImageUrl?: string;
+  showBackButton?: boolean;
 }
 
-export default function CustomHeader({ title, profileImageUrl = null }: CustomHeaderProps) {
+export default function CustomHeader({ 
+  title, 
+  profileImageUrl = '', 
+  showBackButton = false 
+}: CustomHeaderProps) {
   const handleProfilePress = () => {
-    // Navegar a la pantalla de perfil
-    router.push('/profile');
+    router.push('/profile' as any);
   };
 
   return (
@@ -21,7 +25,7 @@ export default function CustomHeader({ title, profileImageUrl = null }: CustomHe
           source={
             profileImageUrl 
               ? { uri: profileImageUrl } 
-              : require('@/assets/images/profile.jpg') // Asegúrate de tener esta imagen
+              : require('@/assets/images/profile.jpg')
           } 
           style={styles.profileImage} 
         />
