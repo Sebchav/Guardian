@@ -1,74 +1,109 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  Animated,
+  Dimensions,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import FloatingActionButton from '@/components/navigation/FloatingActionButton';
+import MenuSheet from '@/components/navigation/MenuSheet';
+import { useNavigation } from 'expo-router';
+import { useLayoutEffect } from 'react';
+import EstadoActualCard from '@/components/monitoring/ActualCard';
+import ResumenSaludCard from '@/components/monitoring/HealthCard';
+import DatosSaludCard from '@/components/monitoring/HealthDataCard';
+import DispositivosConectadosCard from '@/components/monitoring/DevicesConnectedCard';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const { height } = Dimensions.get('window');
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const slideAnim = useRef(new Animated.Value(height)).current;
+  const navigation = useNavigation();
+
+useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Monitorización', 
+    });
+  }, []);
+
+  const openMenu = () => {
+    setIsMenuOpen(true);
+    Animated.timing(slideAnim, {
+      toValue: height * 0.25,
+      duration: 400,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const closeMenu = () => {
+    Animated.timing(slideAnim, {
+      toValue: height,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => setIsMenuOpen(false));
+  };
+
+  const handleNavigate = (path: string) => {
+    closeMenu();
+    setTimeout(() => router.push(path), 300);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 30 }} // 👈 espacio para no tapar contenido
+      >
+        <EstadoActualCard />
+        <ResumenSaludCard />
+        <DatosSaludCard />
+        <DispositivosConectadosCard />
+      </ScrollView>
+  
+      {/* Backdrop cuando se abre el menú */}
+      {isMenuOpen && <Pressable style={styles.backdrop} onPress={closeMenu} />}
+  
+      <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
+  
+      {/* FAB siempre visible, fijo en pantalla */}
+      <FloatingActionButton
+        isMenuOpen={isMenuOpen}
+        onPress={isMenuOpen ? closeMenu : openMenu}
+      />
+    </View>
   );
+  
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: '#e9ecf3',
+    paddingHorizontal: 20, // ✅ Agregado para que los componentes internos tengan espacio
+    paddingTop: 20, // opcion
+    marginBottom: 40, // opcion
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 24,
+    marginBottom: 200,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
+  backdrop: {
+    position: 'absolute',
+    top: 0,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    right: 0,
+    backgroundColor: '#00000055',
+    zIndex: 1,
   },
+  
 });
