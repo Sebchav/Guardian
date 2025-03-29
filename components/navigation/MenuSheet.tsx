@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import MenuOptionGridItem from './MenuOptionGridItem';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 interface Props {
   slideAnim: Animated.Value;
@@ -26,8 +26,23 @@ const menuItems = [
 ];
 
 export default function MenuSheet({ slideAnim, onSelect }: Props) {
+  // Calculamos la opacidad basada en la posición de la animación
+  const opacity = slideAnim.interpolate({
+    inputRange: [height * 0.25, height],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <Animated.View style={[styles.sheet, { top: slideAnim }]}>
+    <Animated.View 
+      style={[
+        styles.sheet, 
+        { 
+          bottom: slideAnim,
+          opacity 
+        }
+      ]}
+    >
       <View style={styles.sheetHandle} />
       <View style={styles.grid}>
         {menuItems.map((item, index) => (
@@ -39,6 +54,8 @@ export default function MenuSheet({ slideAnim, onSelect }: Props) {
           />
         ))}
       </View>
+      {/* Espacio adicional para el FAB */}
+      <View style={styles.fabSpace} />
     </Animated.View>
   );
 }
@@ -48,13 +65,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    height: height * 0.65,
     backgroundColor: 'white',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 40,
     paddingTop: 20,
-    elevation: 20,
+    elevation: 5,
     zIndex: 2,
   },
   sheetHandle: {
@@ -62,18 +78,16 @@ const styles = StyleSheet.create({
     width: 50,
     height: 6,
     borderRadius: 3,
-    marginBottom: 10,
-  },
-  menuTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
+    backgroundColor: '#E0E0E0',
     marginBottom: 20,
-    color: '#333',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
+  fabSpace: {
+    height: 100, // Espacio para el FAB
+    width: '100%',
+  }
 });

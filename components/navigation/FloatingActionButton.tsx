@@ -24,10 +24,10 @@ export default function FloatingActionButton({ isMenuOpen, onPress }: Props) {
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 30,
     left: 0,
     right: 0,
-    alignItems: 'center', // ✅ Flex centering
+    alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
   },
