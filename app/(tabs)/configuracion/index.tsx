@@ -10,6 +10,7 @@ import {
   Animated,
   Dimensions,
   Pressable,
+  Image
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useNavigation } from 'expo-router';
@@ -29,6 +30,7 @@ export default function ConfiguracionScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [highContrastEnabled, setHighContrastEnabled] = useState(false);
   const [largeTextEnabled, setLargeTextEnabled] = useState(false);
+  const [showProfiles, setShowProfiles] = useState(false); // Estado para ver/ocultar perfiles
   
   // Estados para el menú flotante
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -95,12 +97,37 @@ export default function ConfiguracionScreen() {
             <UserProfileCard 
               name="María Garcia"
               email="mariagar32@gmail.com"
-              imageUrl="https://images.unsplash.com/photo-1581579438747-104c53d7fbc4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
-              onEditPress={() => {
-                // Esta función no hace nada, solo está para mostrar el botón
-                console.log('Editar perfil presionado');
-              }}
+              onEditPress={() => console.log('Editar perfil presionado')}
             />
+
+            {/* Botón para ver/ocultar otros perfiles */}
+            <TouchableOpacity 
+              style={styles.profilesButton} 
+              onPress={() => setShowProfiles(!showProfiles)}
+            >
+              <Text style={styles.profilesButtonText}>
+                {showProfiles ? 'Ocultar perfiles' : 'Ver perfiles'}
+              </Text>
+            </TouchableOpacity>
+
+            {showProfiles && (
+              <View style={styles.profilesContainer}>
+                <View style={styles.profileItem}>
+                  <Image 
+                    source={require('@/assets/images/profile2.jpg')} 
+                    style={styles.profileImage} 
+                  />
+                  <Text style={styles.profileName}>Juan Pérez</Text>
+                </View>
+                <View style={styles.profileItem}>
+                  <Image 
+                    source={require('@/assets/images/profile3.jpg')} 
+                    style={styles.profileImage} 
+                  />
+                  <Text style={styles.profileName}>Pedro López</Text>
+                </View>
+              </View>
+            )}
 
             <DispositivosConectadosCard />
             
@@ -219,6 +246,37 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  profilesButton: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#7C78FF',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  profilesButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  profilesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginTop: 10,
+  },
+  profileItem: {
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginBottom: 5,
+  },
+  profileName: {
+    fontSize: 12,
+    color: '#333',
+  },
   backdrop: {
     position: 'absolute',
     top: 0,
@@ -230,6 +288,6 @@ const styles = StyleSheet.create({
   },
   // Espacio adicional al final del ScrollView para evitar que el FAB tape contenido
   fabSpacing: {
-    height: 90, // Altura suficiente para el FAB
+    height: 90,
   },
 });

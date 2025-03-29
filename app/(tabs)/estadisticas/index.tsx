@@ -10,14 +10,16 @@ import {
   Alert,
   Animated,
   Pressable,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from 'expo-router';
+import { useNavigation, router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import ReportesDiarios from '@/components/stats/Reportes';
 import TendenciasProCard from '@/components/stats/Tendencias';
 import FloatingActionButton from '@/components/navigation/FloatingActionButton';
 import MenuSheet from '@/components/navigation/MenuSheet';
+import CustomHeader from '@/components/navigation/CustomHeader';
 
 interface SemanaResumen {
   semana: string;
@@ -84,7 +86,8 @@ export default function ReportesResumenesCard() {
     mesesMock.map((_, idx) => idx).slice(0, 4)
   );
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const slideAnim = useRef(new Animated.Value(height)).current;
+  // Inicializar la animación con un valor negativo para que salga desde abajo
+  const slideAnim = useRef(new Animated.Value(-height)).current;
   const navigation = useNavigation();
 
   // Datos y resumen actual en función del tipo seleccionado
@@ -93,7 +96,7 @@ export default function ReportesResumenesCard() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: 'Estadísticas',
+      headerShown: false, // Ocultar la barra de navegación predeterminada
     });
   }, []);
 
@@ -148,7 +151,7 @@ export default function ReportesResumenesCard() {
   const openMenu = () => {
     setIsMenuOpen(true);
     Animated.timing(slideAnim, {
-      toValue: height * 0.25,
+      toValue: 0, // El menú se posiciona en la parte inferior (0)
       duration: 400,
       useNativeDriver: false,
     }).start();
@@ -156,7 +159,7 @@ export default function ReportesResumenesCard() {
 
   const closeMenu = () => {
     Animated.timing(slideAnim, {
-      toValue: height,
+      toValue: -height, // Se oculta completamente debajo de la pantalla
       duration: 300,
       useNativeDriver: false,
     }).start(() => setIsMenuOpen(false));
@@ -164,7 +167,7 @@ export default function ReportesResumenesCard() {
 
   const handleNavigate = (path: string) => {
     closeMenu();
-    setTimeout(() => navigation.navigate(path as never), 300);
+    setTimeout(() => router.push(path), 300);
   };
 
   // Mensaje predictivo simulado
@@ -174,174 +177,194 @@ export default function ReportesResumenesCard() {
       : "Predicción: En los próximos meses, ajustar su rutina de ejercicio y mejorar la calidad del sueño podría prevenir complicaciones cardiovasculares.";
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView style={{ marginTop: 24 }} contentContainerStyle={{ paddingBottom: 80 }}>
-        {/* Tabs para seleccionar resumen */}
-        <View style={styles.tabs}>
-          <TouchableOpacity
-            onPress={() => {
-              setTipo('semanal');
-              setIndice(0);
-            }}
-            style={[styles.tab, tipo === 'semanal' && styles.tabActivo]}
+    <View style={styles.mainContainer}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerBackground}>
+          <CustomHeader title="Estadísticas" />
+        </View>
+        
+        <View style={styles.container}>
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={tipo === 'semanal' ? styles.tabTextActivo : styles.tabText}>
-              Resumen semanal
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setTipo('mensual');
-              setIndice(0);
-            }}
-            style={[styles.tab, tipo === 'mensual' && styles.tabActivo]}
-          >
-            <Text style={tipo === 'mensual' ? styles.tabTextActivo : styles.tabText}>
-              Resumen mensual
-            </Text>
-          </TouchableOpacity>
-        </View>
+            {/* Tabs para seleccionar resumen */}
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                onPress={() => {
+                  setTipo('semanal');
+                  setIndice(0);
+                }}
+                style={[styles.tab, tipo === 'semanal' && styles.tabActivo]}
+              >
+                <Text style={tipo === 'semanal' ? styles.tabTextActivo : styles.tabText}>
+                  Resumen semanal
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setTipo('mensual');
+                  setIndice(0);
+                }}
+                style={[styles.tab, tipo === 'mensual' && styles.tabActivo]}
+              >
+                <Text style={tipo === 'mensual' ? styles.tabTextActivo : styles.tabText}>
+                  Resumen mensual
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-        {/* Tarjeta de información */}
-        <View style={styles.card}>
-          <View style={styles.topRow}>
-            <TouchableOpacity onPress={() => setIndice((prev) => Math.min(prev + 1, datos.length - 1))}>
-              <Ionicons name="arrow-back-circle-outline" size={24} color="#888" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <Ionicons name="filter-outline" size={24} color="#888" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.infoContainer}>
-            <Text style={styles.title}>
-              {tipo === 'semanal'
-                ? (resumenActual as SemanaResumen).semana
-                : (resumenActual as MesResumen).mes}
-            </Text>
-            <View style={styles.statRow}>
-              <Ionicons name="walk-outline" size={20} color="#7C78FF" style={styles.statIcon} />
-              <Text style={styles.statLabel}>Pasos:</Text>
-              <Text style={styles.statValue}>{resumenActual.pasos}</Text>
+            {/* Tarjeta de información */}
+            <View style={styles.card}>
+              <View style={styles.topRow}>
+                <TouchableOpacity onPress={() => setIndice((prev) => Math.min(prev + 1, datos.length - 1))}>
+                  <Ionicons name="arrow-back-circle-outline" size={24} color="#888" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setModalVisible(true)}>
+                  <Ionicons name="filter-outline" size={24} color="#888" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.infoContainer}>
+                <Text style={styles.title}>
+                  {tipo === 'semanal'
+                    ? (resumenActual as SemanaResumen).semana
+                    : (resumenActual as MesResumen).mes}
+                </Text>
+                <View style={styles.statRow}>
+                  <Ionicons name="walk-outline" size={20} color="#7C78FF" style={styles.statIcon} />
+                  <Text style={styles.statLabel}>Pasos:</Text>
+                  <Text style={styles.statValue}>{resumenActual.pasos}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Ionicons name="heart-outline" size={20} color="#7C78FF" style={styles.statIcon} />
+                  <Text style={styles.statLabel}>Ritmo Cardíaco:</Text>
+                  <Text style={styles.statValue}>{resumenActual.ritmoCardiacoPromedio} ppm</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Ionicons name="moon-outline" size={20} color="#7C78FF" style={styles.statIcon} />
+                  <Text style={styles.statLabel}>Sueño:</Text>
+                  <Text style={styles.statValue}>{resumenActual.horasSueno} hrs</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Ionicons name="flame-outline" size={20} color="#7C78FF" style={styles.statIcon} />
+                  <Text style={styles.statLabel}>Actividad Física:</Text>
+                  <Text style={styles.statValue}>{resumenActual.actividadFisica}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Ionicons name="alert-circle-outline" size={20} color="#7C78FF" style={styles.statIcon} />
+                  <Text style={styles.statLabel}>Alertas:</Text>
+                  <Text style={styles.statValue}>{resumenActual.alertas}</Text>
+                </View>
+              </View>
             </View>
-            <View style={styles.statRow}>
-              <Ionicons name="heart-outline" size={20} color="#7C78FF" style={styles.statIcon} />
-              <Text style={styles.statLabel}>Ritmo Cardíaco:</Text>
-              <Text style={styles.statValue}>{resumenActual.ritmoCardiacoPromedio} ppm</Text>
-            </View>
-            <View style={styles.statRow}>
-              <Ionicons name="moon-outline" size={20} color="#7C78FF" style={styles.statIcon} />
-              <Text style={styles.statLabel}>Sueño:</Text>
-              <Text style={styles.statValue}>{resumenActual.horasSueno} hrs</Text>
-            </View>
-            <View style={styles.statRow}>
-              <Ionicons name="flame-outline" size={20} color="#7C78FF" style={styles.statIcon} />
-              <Text style={styles.statLabel}>Actividad Física:</Text>
-              <Text style={styles.statValue}>{resumenActual.actividadFisica}</Text>
-            </View>
-            <View style={styles.statRow}>
-              <Ionicons name="alert-circle-outline" size={20} color="#7C78FF" style={styles.statIcon} />
-              <Text style={styles.statLabel}>Alertas:</Text>
-              <Text style={styles.statValue}>{resumenActual.alertas}</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Sección de gráficas */}
-        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 20 }}>
-          <Text style={styles.sectionTitle}>Graficas</Text>
-          {tipo === 'mensual' && (
-            <TouchableOpacity style={styles.selectGraphButton} onPress={() => setGraphModalVisible(true)}>
-              <Ionicons name="filter" size={24} color="#fff" />
-            </TouchableOpacity>
-          )}
-        </View>
+            {/* Sección de gráficas */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 20 }}>
+              <Text style={styles.sectionTitle}>Graficas</Text>
+              {tipo === 'mensual' && (
+                <TouchableOpacity style={styles.selectGraphButton} onPress={() => setGraphModalVisible(true)}>
+                  <Ionicons name="filter" size={24} color="#fff" />
+                </TouchableOpacity>
+              )}
+            </View>
 
-        <View style={styles.metricContainer}>
-          {metrics.map((metric) => (
-            <TouchableOpacity
-              key={metric.key}
-              style={[styles.metricButton, selectedMetric === metric.key && styles.metricButtonSelected]}
-              onPress={() => setSelectedMetric(metric.key)}
-            >
-              <Text style={[styles.metricText, selectedMetric === metric.key && styles.metricTextSelected]}>
-                {metric.label}
+            <View style={styles.metricContainer}>
+              {metrics.map((metric) => (
+                <TouchableOpacity
+                  key={metric.key}
+                  style={[styles.metricButton, selectedMetric === metric.key && styles.metricButtonSelected]}
+                  onPress={() => setSelectedMetric(metric.key)}
+                >
+                  <Text style={[styles.metricText, selectedMetric === metric.key && styles.metricTextSelected]}>
+                    {metric.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.chartContainer}>
+              <LineChart
+                data={{
+                  labels: chartLabels,
+                  datasets: [{ data: chartDataset }],
+                }}
+                width={Dimensions.get('window').width - 32}
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chartStyle}
+              />
+            </View>
+
+            {/* Sección de mensaje predictivo */}
+            <View style={styles.predictionContainer}>
+              <Ionicons name="information-circle-outline" size={24} color="#7C78FF" style={styles.predictionIcon} />
+              <Text style={styles.predictionText}>{predictionMessage}</Text>
+            </View>
+
+            {/* Reportes diarios y Tendencias bloqueadas (Pro) */}
+            <ReportesDiarios />
+            <TendenciasProCard />
+
+            {/* Espacio adicional para el FAB */}
+            <View style={styles.fabSpacing} />
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+
+      {/* Modal para selección de semana/mes */}
+      <Modal visible={modalVisible} animationType="slide">
+        <ScrollView contentContainerStyle={{ padding: 20 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>
+            Selecciona una {tipo === 'semanal' ? 'semana' : 'mes'}
+          </Text>
+          {datos.map((item: SemanaResumen | MesResumen, i: number) => (
+            <TouchableOpacity key={i} style={styles.selectorItem} onPress={() => seleccionarItem(i)}>
+              <Text style={{ fontSize: 16 }}>
+                {tipo === 'semanal'
+                  ? (item as SemanaResumen).semana
+                  : (item as MesResumen).mes}
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+          <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginTop: 20 }}>
+            <Text style={{ color: '#4B6FFF', textAlign: 'center' }}>Cancelar</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </Modal>
 
-        <View style={styles.chartContainer}>
-          <LineChart
-            data={{
-              labels: chartLabels,
-              datasets: [{ data: chartDataset }],
-            }}
-            width={Dimensions.get('window').width - 32}
-            height={220}
-            chartConfig={chartConfig}
-            bezier
-            style={styles.chartStyle}
-          />
-        </View>
-
-        {/* Sección de mensaje predictivo */}
-        <View style={styles.predictionContainer}>
-          <Ionicons name="information-circle-outline" size={24} color="#7C78FF" style={styles.predictionIcon} />
-          <Text style={styles.predictionText}>{predictionMessage}</Text>
-        </View>
-
-        {/* Reportes diarios y Tendencias bloqueadas (Pro) */}
-        <ReportesDiarios />
-        <TendenciasProCard />
-
-        {/* Modal para selección de semana/mes */}
-        <Modal visible={modalVisible} animationType="slide">
-          <ScrollView contentContainerStyle={{ padding: 20 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>
-              Selecciona una {tipo === 'semanal' ? 'semana' : 'mes'}
-            </Text>
-            {datos.map((item: SemanaResumen | MesResumen, i: number) => (
-              <TouchableOpacity key={i} style={styles.selectorItem} onPress={() => seleccionarItem(i)}>
-                <Text style={{ fontSize: 16 }}>
-                  {tipo === 'semanal'
-                    ? (item as SemanaResumen).semana
-                    : (item as MesResumen).mes}
-                </Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginTop: 20 }}>
-              <Text style={{ color: '#4B6FFF', textAlign: 'center' }}>Cancelar</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </Modal>
-
-        {/* Modal para selección de meses (gráfico mensual) */}
-        <Modal visible={graphModalVisible} animationType="slide" transparent>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <ScrollView contentContainerStyle={{ padding: 20 }}>
-                <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>
-                  Selecciona hasta 4 meses para el gráfico
-                </Text>
-                {mesesMock.map((item, i: number) => (
-                  <TouchableOpacity key={i} style={styles.selectorItem} onPress={() => toggleGraphMonth(i)}>
-                    <Text style={{ fontSize: 16 }}>
-                      {item.mes} {selectedGraphMonths.includes(i) && '✓'}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity onPress={() => setGraphModalVisible(false)} style={{ marginTop: 20 }}>
-                  <Text style={{ color: '#4B6FFF', textAlign: 'center' }}>Confirmar</Text>
+      {/* Modal para selección de meses (gráfico mensual) */}
+      <Modal visible={graphModalVisible} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ScrollView contentContainerStyle={{ padding: 20 }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>
+                Selecciona hasta 4 meses para el gráfico
+              </Text>
+              {mesesMock.map((item, i: number) => (
+                <TouchableOpacity key={i} style={styles.selectorItem} onPress={() => toggleGraphMonth(i)}>
+                  <Text style={{ fontSize: 16 }}>
+                    {item.mes} {selectedGraphMonths.includes(i) && '✓'}
+                  </Text>
                 </TouchableOpacity>
-              </ScrollView>
-            </View>
+              ))}
+              <TouchableOpacity onPress={() => setGraphModalVisible(false)} style={{ marginTop: 20 }}>
+                <Text style={{ color: '#4B6FFF', textAlign: 'center' }}>Confirmar</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </Modal>
-      </ScrollView>
+        </View>
+      </Modal>
 
-      {/* Floating Action Button y menú deslizante */}
+      {/* El backdrop solo se muestra cuando el menú está abierto */}
       {isMenuOpen && <Pressable style={styles.backdrop} onPress={closeMenu} />}
-      <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
+      
+      {/* Controlar la visibilidad del MenuSheet */}
+      {(isMenuOpen || slideAnim._value > -height) && 
+        <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
+      }
+      
       <FloatingActionButton
         isMenuOpen={isMenuOpen}
         onPress={isMenuOpen ? closeMenu : openMenu}
@@ -351,9 +374,38 @@ export default function ReportesResumenesCard() {
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  headerBackground: {
+    backgroundColor: '#7C78FF',
+    paddingTop: 40,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#e9ecf3',
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  scrollViewContent: {
+    paddingBottom: 20,
+  },
+  fabSpacing: {
+    height: 90, // Altura suficiente para el FAB
+  },
   tabs: {
     flexDirection: 'row',
     marginBottom: 8,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   tab: {
     flex: 1,
@@ -379,6 +431,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 6,
+    marginBottom: 16,
   },
   topRow: {
     flexDirection: 'row',
@@ -480,7 +533,7 @@ const styles = StyleSheet.create({
   predictionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 20,
+    marginHorizontal: 4,
     padding: 15,
     backgroundColor: '#e6f0ff',
     borderRadius: 12,
@@ -535,4 +588,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
