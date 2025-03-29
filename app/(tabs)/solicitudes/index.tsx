@@ -15,6 +15,7 @@ import SolicitudesRecientesCard from '@/components/requests/RecentRequestsCard';
 
 const { height } = Dimensions.get('window');
 
+
 export default function SolicitudesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
