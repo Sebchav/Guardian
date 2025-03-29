@@ -1,36 +1,41 @@
 // app/recordatorios.tsx
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 import {
   View,
+  ScrollView,
   Animated,
-  Dimensions,
   Pressable,
   StyleSheet,
-  ScrollView,
+  Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLayoutEffect } from 'react';
-import { router } from 'expo-router'; // ✅ Usa router en lugar de useNavigation
+import { router, useNavigation } from 'expo-router';
 import FloatingActionButton from '@/components/navigation/FloatingActionButton';
 import MenuSheet from '@/components/navigation/MenuSheet';
 import RecordatoriosCard from '@/components/Reminders';
 import AlertasRecientesCard from '@/components/RecientAlerts';
+import CustomHeader from '@/components/navigation/CustomHeader';
 
 const { height } = Dimensions.get('window');
 
 export default function RecordatoriosScreen() {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const slideAnim = useRef(new Animated.Value(height)).current;
+  // Inicializar la animación con un valor negativo para que salga desde abajo
+  const slideAnim = useRef(new Animated.Value(-height)).current;
 
   useLayoutEffect(() => {
-    // Si quieres un título en la barra superior (opcional)
+    navigation.setOptions({
+      headerShown: false, // Ocultar la barra de navegación predeterminada
+    });
   }, []);
 
   const openMenu = () => {
     setIsMenuOpen(true);
     Animated.timing(slideAnim, {
-      toValue: height * 0.25,
+      toValue: 0, // El menú se posiciona en la parte inferior (0)
       duration: 400,
       useNativeDriver: false,
     }).start();
@@ -38,7 +43,7 @@ export default function RecordatoriosScreen() {
 
   const closeMenu = () => {
     Animated.timing(slideAnim, {
-      toValue: height,
+      toValue: -height, // Se oculta completamente debajo de la pantalla
       duration: 300,
       useNativeDriver: false,
     }).start(() => setIsMenuOpen(false));
@@ -46,23 +51,39 @@ export default function RecordatoriosScreen() {
 
   const handleNavigate = (path: string) => {
     closeMenu();
-    setTimeout(() => router.push(path), 300); // ✅ Navegación con expo-router
+    setTimeout(() => router.push(path), 300);
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 30 }}
-      >
-        <RecordatoriosCard />
-        <AlertasRecientesCard />
-      </ScrollView>
+    <View style={styles.mainContainer}>
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header personalizado con título y foto de perfil */}
+        <View style={styles.headerBackground}>
+          <CustomHeader title="Recordatorios" />
+        </View>
+        <View style={styles.container}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <RecordatoriosCard />
+            <AlertasRecientesCard />
+            
+            {/* Espacio adicional para el FAB */}
+            <View style={styles.fabSpacing} />
+          </ScrollView>
+        </View>
+      </SafeAreaView>
 
+      {/* El backdrop solo se muestra cuando el menú está abierto */}
       {isMenuOpen && <Pressable style={styles.backdrop} onPress={closeMenu} />}
-
-      <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
-
+      
+      {/* Controlar la visibilidad del MenuSheet */}
+      {(isMenuOpen || slideAnim._value > -height) && 
+        <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
+      }
+      
       <FloatingActionButton
         isMenuOpen={isMenuOpen}
         onPress={isMenuOpen ? closeMenu : openMenu}
@@ -72,11 +93,31 @@ export default function RecordatoriosScreen() {
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  headerBackground: {
+    backgroundColor: '#7C78FF',
+    paddingTop: 40,
+  },
   container: {
     flex: 1,
     backgroundColor: '#e9ecf3',
+  },
+  scrollView: {
+    flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
+  },
+  scrollViewContent: {
+    paddingBottom: 20,
+  },
+  fabSpacing: {
+    height: 90,
   },
   backdrop: {
     position: 'absolute',

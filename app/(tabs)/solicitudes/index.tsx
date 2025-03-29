@@ -1,36 +1,40 @@
+// app/solicitudes.tsx
 import React, { useRef, useState, useLayoutEffect } from 'react';
 import {
   View,
   ScrollView,
-  StyleSheet,
-  Pressable,
   Animated,
+  Pressable,
+  StyleSheet,
   Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import FloatingActionButton from '@/components/navigation/FloatingActionButton';
 import MenuSheet from '@/components/navigation/MenuSheet';
 import SolicitudesRecientesCard from '@/components/requests/RecentRequestsCard';
+import CustomHeader from '@/components/navigation/CustomHeader';
 
 const { height } = Dimensions.get('window');
 
 export default function SolicitudesScreen() {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const slideAnim = useRef(new Animated.Value(height)).current;
+  // Inicializar la animación con un valor negativo para que salga desde abajo
+  const slideAnim = useRef(new Animated.Value(-height)).current;
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: 'Solicitudes',
+      headerShown: false, // Ocultar la barra de navegación predeterminada
     });
   }, []);
 
   const openMenu = () => {
     setIsMenuOpen(true);
     Animated.timing(slideAnim, {
-      toValue: height * 0.25,
+      toValue: 0, // El menú se posiciona en la parte inferior (0)
       duration: 400,
       useNativeDriver: false,
     }).start();
@@ -38,7 +42,7 @@ export default function SolicitudesScreen() {
 
   const closeMenu = () => {
     Animated.timing(slideAnim, {
-      toValue: height,
+      toValue: -height, // Se oculta completamente debajo de la pantalla
       duration: 300,
       useNativeDriver: false,
     }).start(() => setIsMenuOpen(false));
@@ -50,16 +54,34 @@ export default function SolicitudesScreen() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 30 }}
-      >
-        <SolicitudesRecientesCard />
-      </ScrollView>
+    <View style={styles.mainContainer}>
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header personalizado con título y foto de perfil */}
+        <View style={styles.headerBackground}>
+          <CustomHeader title="Solicitudes" />
+        </View>
+        <View style={styles.container}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <SolicitudesRecientesCard />
+            
+            {/* Espacio adicional para el FAB */}
+            <View style={styles.fabSpacing} />
+          </ScrollView>
+        </View>
+      </SafeAreaView>
 
+      {/* El backdrop solo se muestra cuando el menú está abierto */}
       {isMenuOpen && <Pressable style={styles.backdrop} onPress={closeMenu} />}
-      <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
+      
+      {/* Controlar la visibilidad del MenuSheet */}
+      {(isMenuOpen || slideAnim._value > -height) && 
+        <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
+      }
+      
       <FloatingActionButton
         isMenuOpen={isMenuOpen}
         onPress={isMenuOpen ? closeMenu : openMenu}
@@ -69,11 +91,31 @@ export default function SolicitudesScreen() {
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  headerBackground: {
+    backgroundColor: '#7C78FF',
+    paddingTop: 40,
+  },
   container: {
     flex: 1,
     backgroundColor: '#e9ecf3',
+  },
+  scrollView: {
+    flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
+  },
+  scrollViewContent: {
+    paddingBottom: 20,
+  },
+  fabSpacing: {
+    height: 90,
   },
   backdrop: {
     position: 'absolute',
