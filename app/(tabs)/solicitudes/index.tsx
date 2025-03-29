@@ -14,6 +14,7 @@ import { router, useNavigation } from 'expo-router';
 import FloatingActionButton from '@/components/navigation/FloatingActionButton';
 import MenuSheet from '@/components/navigation/MenuSheet';
 import SolicitudesRecientesCard from '@/components/requests/RecentRequestsCard';
+import FrequentNeedsCard from '@/components/requests/FrequentNeedsCard';
 import CustomHeader from '@/components/navigation/CustomHeader';
 
 const { height } = Dimensions.get('window');
@@ -48,9 +49,9 @@ export default function SolicitudesScreen() {
     }).start(() => setIsMenuOpen(false));
   };
 
-  const handleNavigate = (path: string) => {
+  const handleNavigate = (path: any) => {
     closeMenu();
-    setTimeout(() => router.push(path), 300);
+    setTimeout(() => router.push(path as any), 300);
   };
 
   return (
@@ -58,7 +59,7 @@ export default function SolicitudesScreen() {
       <SafeAreaView style={styles.safeArea}>
         {/* Header personalizado con título y foto de perfil */}
         <View style={styles.headerBackground}>
-          <CustomHeader title="Solicitudes" />
+          <CustomHeader title="Solicitudes" profileImageUrl="" />
         </View>
         <View style={styles.container}>
           <ScrollView
@@ -67,6 +68,7 @@ export default function SolicitudesScreen() {
             showsVerticalScrollIndicator={false}
           >
             <SolicitudesRecientesCard />
+            <FrequentNeedsCard />
             
             {/* Espacio adicional para el FAB */}
             <View style={styles.fabSpacing} />
@@ -78,7 +80,7 @@ export default function SolicitudesScreen() {
       {isMenuOpen && <Pressable style={styles.backdrop} onPress={closeMenu} />}
       
       {/* Controlar la visibilidad del MenuSheet */}
-      {(isMenuOpen || slideAnim._value > -height) && 
+      {(isMenuOpen || (slideAnim as any)._value > -height) && 
         <MenuSheet slideAnim={slideAnim} onSelect={handleNavigate} />
       }
       
